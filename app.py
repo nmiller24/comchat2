@@ -17,7 +17,13 @@ def create_app():
     Config.init_app(app)
     
     # Initialize extensions
-    CORS(app)
+    CORS(app, resources={
+        r"/*": {
+            "origins": ["http://localhost:5009", "http://127.0.0.1:5009"],
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type"]
+        }
+    })
     init_db(app)
     limiter = init_limiter(app)
     init_logger(app)
