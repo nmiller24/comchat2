@@ -1,82 +1,24 @@
 # BookChat
 
-A modern real-time chat application with GitHub integration for message persistence.
+A simple, modern chat application that runs entirely in your browser.
 
 ## Features
 
-- Real-time message updates with 5-second polling
-- GitHub-based message persistence
+- Browser-based message storage using localStorage
 - Modern, responsive UI
-- SQLite database for local storage
-- Comprehensive test coverage
+- No server required
+- Works offline
 
-## Prerequisites
+## Usage
 
-- Python 3.11+
-- Git
-- GitHub account with personal access token
-
-## Setup
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd bookchat
-```
-
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Create a `.env` file with the following configuration:
-```
-GITHUB_TOKEN=your_github_token
-FLASK_ENV=development
-PORT=5002
-```
-
-5. Initialize the database:
-```bash
-python app.py init-db
-```
-
-## Running the Application
-
-Start the server:
-```bash
-python app.py
-```
-
-The application will be available at `http://localhost:5002`
-
-## Testing
-
-Run the test suite:
-```bash
-python run_tests.py
-```
+Simply open `index.html` in your web browser to start using the application.
 
 ## Project Structure
 
-- `app.py`: Main application entry point
-- `config.py`: Configuration management
-- `utils/`: Utility modules for database, GitHub integration, etc.
-- `static/`: Frontend assets (CSS, JavaScript)
-- `templates/`: HTML templates
-- `tests/`: Test suite
-
-## API Endpoints
-
-- `GET /messages`: Retrieve message history
-- `POST /messages`: Create new message
-- `GET /status`: System status and statistics
+- `index.html`: Main application page
+- `static/`: Frontend assets
+  - `css/`: Stylesheets
+  - `js/`: JavaScript files
 
 ## Browser Support
 

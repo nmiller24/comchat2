@@ -3,56 +3,83 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageContainer = document.getElementById('message-container');
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
-    let lastMessageTimestamp = null;
+    let sessionLog = [];
 
-    // Poll for new messages every 5 seconds
-    const pollInterval = 5000;
+    // Create download log button
+    const downloadLogButton = document.createElement('button');
+    downloadLogButton.textContent = 'Download Session Log';
+    downloadLogButton.className = 'download-log-btn';
+    document.querySelector('.container').appendChild(downloadLogButton);
 
-    async function fetchMessages() {
-        try {
-            const response = await fetch('/messages');
-            if (!response.ok) throw new Error('Failed to fetch messages');
-            const messages = await response.json();
-            updateMessages(messages);
-        } catch (error) {
-            showError('Error fetching messages: ' + error.message);
-        }
+    // Initialize messages from localStorage
+    function getMessages() {
+        const messages = localStorage.getItem('bookchat_messages');
+        return messages ? JSON.parse(messages) : [];
+    }
+
+    function saveMessages(messages) {
+        localStorage.setItem('bookchat_messages', JSON.stringify(messages));
     }
 
     function updateMessages(messages) {
         if (!messages.length) return;
         
-        const latestTimestamp = messages[messages.length - 1].created_at;
-        if (latestTimestamp === lastMessageTimestamp) return;
-        
         messageContainer.innerHTML = messages.map(message => `
-            <div class="message ${message.synced ? 'synced' : 'pending'}">
+            <div class="message">
                 <div class="message-content">${escapeHtml(message.content)}</div>
                 <div class="message-timestamp">${formatTimestamp(message.created_at)}</div>
-                ${message.synced ? '<div class="sync-status">✓</div>' : ''}
             </div>
         `).join('');
         
-        lastMessageTimestamp = latestTimestamp;
         messageContainer.scrollTop = messageContainer.scrollHeight;
     }
 
-    async function sendMessage(content) {
+    function downloadSessionLog() {
+        if (sessionLog.length === 0) {
+            showError('No messages in current session');
+            return;
+        }
+
+        const logContent = sessionLog.map(entry => 
+            `[${entry.timestamp}] ${entry.message}`
+        ).join('\n');
+
+        const timestamp = new Date().toISOString().replace(/:/g, '-').replace('T', '_');
+        const filename = `session_log_${timestamp}.txt`;
+        
+        const blob = new Blob([logContent], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+    }
+
+    async function addMessage(content) {
+        const messages = getMessages();
+        const timestamp = new Date().toISOString();
+        const newMessage = {
+            content,
+            created_at: timestamp
+        };
+        
         try {
-            const response = await fetch('/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ content })
+            // Add to session log
+            sessionLog.push({
+                timestamp: timestamp,
+                message: content
             });
             
-            if (!response.ok) throw new Error('Failed to send message');
-            
+            // Continue with normal message display
+            messages.push(newMessage);
+            saveMessages(messages);
+            updateMessages(messages);
             messageInput.value = '';
-            await fetchMessages();
         } catch (error) {
-            showError('Error sending message: ' + error.message);
+            showError('Error saving message: ' + error.message);
         }
     }
 
@@ -77,15 +104,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Event Listeners
-    messageForm.addEventListener('submit', (e) => {
+    messageForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const content = messageInput.value.trim();
         if (content) {
-            sendMessage(content);
+            await addMessage(content);
         }
     });
 
-    // Initial fetch and polling setup
-    fetchMessages();
-    setInterval(fetchMessages, pollInterval);
+    downloadLogButton.addEventListener('click', downloadSessionLog);
+
+    // Initial load of messages
+    updateMessages(getMessages());
 });
