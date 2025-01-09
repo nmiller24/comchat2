@@ -5,27 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookChat</title>
     <link rel="stylesheet" href="static/styles.css">
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,es,fr,de,it,pt,ru,zh-CN,ja,ko,ar,hi',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </head>
 <body>
-    <header class="header">
-        <h1>BookChat</h1>
-    </header>
+    <div class="phone-container">
+        <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+                <header class="header">
+                    <h1>BookChat</h1>
+                    <div class="header-controls">
+                        <div id="google_translate_element"></div>
+                    </div>
+                </header>
 
-    <div class="container">
-        <div id="message-container"></div>
-        
-        <form id="message-form">
-            <input type="text" 
-                   id="message-input" 
-                   placeholder="Type your message..." 
-                   autocomplete="off" 
-                   required>
-            <button type="submit">Send</button>
-        </form>
+                <div class="container">
+                    <div id="message-container"></div>
+                    
+                    <form id="message-form">
+                        <div class="input-container">
+                            <textarea 
+                                id="message-input" 
+                                placeholder="Type your message..." 
+                                autocomplete="off" 
+                                spellcheck="true"
+                                rows="1"
+                                required></textarea>
+                            <button type="button" id="emoji-button" class="emoji-button">😊</button>
+                        </div>
+                        <button type="submit">Send</button>
+                    </form>
+                    
+                    <div id="emoji-picker" class="emoji-picker">
+                        <!-- Emojis will be dynamically populated here -->
+                    </div>
+                </div>
+
+                <div id="error-notification"></div>
+            </div>
+            <div class="phone-button"></div>
+        </div>
     </div>
-
-    <div id="error-notification"></div>
-
     <script src="static/js/main.js"></script>
 </body>
 </html>

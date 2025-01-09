@@ -3,13 +3,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageContainer = document.getElementById('message-container');
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
+    const emojiButton = document.getElementById('emoji-button');
+    const emojiPicker = document.getElementById('emoji-picker');
     let sessionLog = [];
 
-    // Create download log button
-    const downloadLogButton = document.createElement('button');
-    downloadLogButton.textContent = 'Download Session Log';
-    downloadLogButton.className = 'download-log-btn';
-    document.querySelector('.container').appendChild(downloadLogButton);
+    // Common emojis array
+    const commonEmojis = [
+        '😊', '😂', '🤣', '❤️', '😍', '😒', '👍', '😭',
+        '😘', '🥰', '😅', '😉', '🙂', '😎', '🤔', '😢',
+        '😆', '🥺', '😋', '😇', '😡', '🤗', '😴', '🤓',
+        '👋', '🎉', '✨', '🌟', '💡', '📚', '✅', '❌'
+    ];
+
+    // Initialize emoji picker
+    function initializeEmojiPicker() {
+        commonEmojis.forEach(emoji => {
+            const emojiElement = document.createElement('div');
+            emojiElement.className = 'emoji-item';
+            emojiElement.textContent = emoji;
+            emojiElement.addEventListener('click', () => {
+                insertEmoji(emoji);
+                emojiPicker.classList.remove('active');
+            });
+            emojiPicker.appendChild(emojiElement);
+        });
+    }
+
+    // Insert emoji at cursor position
+    function insertEmoji(emoji) {
+        const start = messageInput.selectionStart;
+        const end = messageInput.selectionEnd;
+        const text = messageInput.value;
+        const before = text.substring(0, start);
+        const after = text.substring(end);
+        messageInput.value = before + emoji + after;
+        messageInput.focus();
+        messageInput.selectionStart = messageInput.selectionEnd = start + emoji.length;
+    }
+
+    // Auto-resize textarea
+    function autoResizeTextarea() {
+        messageInput.style.height = 'auto';
+        messageInput.style.height = (messageInput.scrollHeight) + 'px';
+    }
+
+    messageInput.addEventListener('input', autoResizeTextarea);
+    messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            messageForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // Toggle emoji picker
+    emojiButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        emojiPicker.classList.toggle('active');
+    });
+
+    // Close emoji picker when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!emojiPicker.contains(e.target) && !emojiButton.contains(e.target)) {
+            emojiPicker.classList.remove('active');
+        }
+    });
 
     // Initialize messages from localStorage
     function getMessages() {
@@ -34,60 +91,32 @@ document.addEventListener('DOMContentLoaded', () => {
         messageContainer.scrollTop = messageContainer.scrollHeight;
     }
 
-    function downloadSessionLog() {
-        if (sessionLog.length === 0) {
-            showError('No messages in current session');
-            return;
-        }
-
-        const logContent = sessionLog.map(entry => 
-            `[${entry.timestamp}] ${entry.message}`
-        ).join('\n');
-
-        const timestamp = new Date().toISOString().replace(/:/g, '-').replace('T', '_');
-        const filename = `session_log_${timestamp}.txt`;
-        
-        const blob = new Blob([logContent], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
-    }
-
-    async function addMessage(content) {
+    function addMessage(content) {
         const messages = getMessages();
-        const timestamp = new Date().toISOString();
         const newMessage = {
+            id: Date.now(),
             content,
-            created_at: timestamp
+            created_at: new Date().toISOString()
         };
         
-        try {
-            // Add to session log
-            sessionLog.push({
-                timestamp: timestamp,
-                message: content
-            });
-            
-            // Continue with normal message display
-            messages.push(newMessage);
-            saveMessages(messages);
-            updateMessages(messages);
-            messageInput.value = '';
-        } catch (error) {
-            showError('Error saving message: ' + error.message);
-        }
+        messages.push(newMessage);
+        saveMessages(messages);
+        updateMessages(messages);
+        
+        // Add to session log
+        sessionLog.push({
+            timestamp: newMessage.created_at,
+            message: content
+        });
+        
+        return newMessage;
     }
 
     function showError(message) {
-        const errorDiv = document.getElementById('error-notification');
-        errorDiv.textContent = message;
-        errorDiv.classList.add('show');
-        setTimeout(() => errorDiv.classList.remove('show'), 5000);
+        const errorNotification = document.getElementById('error-notification');
+        errorNotification.textContent = message;
+        errorNotification.classList.add('show');
+        setTimeout(() => errorNotification.classList.remove('show'), 3000);
     }
 
     function escapeHtml(unsafe) {
@@ -100,20 +129,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatTimestamp(timestamp) {
-        return new Date(timestamp).toLocaleTimeString();
+        const date = new Date(timestamp);
+        const now = new Date();
+        const isToday = date.toDateString() === now.toDateString();
+        
+        const timeStr = date.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit'
+        });
+        
+        if (isToday) {
+            return `🕒 ${timeStr}`;
+        } else {
+            const dateStr = date.toLocaleDateString([], { 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            return `📅 ${dateStr}, ${timeStr}`;
+        }
     }
 
     // Event Listeners
     messageForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const content = messageInput.value.trim();
+        
         if (content) {
-            await addMessage(content);
+            addMessage(content);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
         }
     });
 
-    downloadLogButton.addEventListener('click', downloadSessionLog);
-
     // Initial load of messages
     updateMessages(getMessages());
+    initializeEmojiPicker();
 });
