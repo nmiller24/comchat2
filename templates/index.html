@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookChat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header class="header">
+        <h1>BookChat</h1>
+    </header>
+
+    <div class="container">
+        <div id="message-container"></div>
+        
+        <form id="message-form">
+            <input type="text" 
+                   id="message-input" 
+                   placeholder="Type your message..." 
+                   autocomplete="off" 
+                   required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <div id="error-notification"></div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
